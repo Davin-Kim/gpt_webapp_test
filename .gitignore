@@ -1,0 +1,14 @@
+node_modules/
+dist/
+test-results/
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+MY_MONEY_*.json
+*.json.backup
+attachments/
+backups/
+playwright-report/
+.env
+.env.*
