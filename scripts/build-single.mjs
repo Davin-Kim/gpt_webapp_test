@@ -9,14 +9,14 @@ for (const match of [...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)]) {
   const href = match[0].match(/href="([^"]+)"/)?.[1];
   if (!href) throw Error('Stylesheet URL missing');
   const css = (await readFile(resolve(dist, 'assets', basename(href)), 'utf8'))
-    .replace(/@import\s+(?:url\([^)]*\)|"[^"]*"|'[^']*')\s*;/g, '');
+    .replace(/@import\s*(?:url\([^)]*\)|"[^"]*"|'[^']*')\s*;/g, '');
   html = html.replace(match[0], `<style>${css.replace(/<\/style/gi, '<\\/style')}</style>`);
 }
 for (const match of [...html.matchAll(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/g)]) {
   const js = await readFile(resolve(dist, 'assets', basename(match[1])), 'utf8');
   html = html.replace(match[0], () => `<script type="module">${js.replace(/<\/script/gi, '<\\/script')}</script>`);
 }
-if (/<script[^>]+src=|<link[^>]+rel="stylesheet"|@import\s/.test(html)) {
+if (/<script[^>]+src=|<link[^>]+rel="stylesheet"|@import\b/.test(html)) {
   throw Error('Standalone file still has external code or stylesheet dependencies');
 }
 // file:// works offline, using installed Korean fonts instead of Google Fonts.
