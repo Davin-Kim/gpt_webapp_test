@@ -45,3 +45,11 @@ npm run build
 주소: https://davin-kim.github.io/gpt_webapp_test/
 
 파일: `src/model.js` 행사 데이터·캘린더 / `src/art.js` 자체 SVG / `src/app.js` 화면·상호작용 / `src/style.css` 반응형 스타일. 개인 엑셀·실제 가계부 데이터는 소스·빌드에 포함하지 않습니다.
+
+## HTML 파일 하나로 사용
+
+`festival.html`은 CSS·JavaScript·SVG를 모두 포함한 단일 HTML입니다. 다운로드 후 더블클릭해 열거나 파일 전체를 복사해 사용할 수 있습니다. 별도 설치·서버 없이 동작하며, 인터넷이 없어도 화면과 프로그램 기능이 동작합니다. 외부 지도·기사 링크는 인터넷이 필요합니다. 단일 파일은 외부 웹폰트 대신 기기에 설치된 글꼴을 사용합니다. file:// 환경의 브라우저 저장 정책에 따라 관심 일정 저장이 제한되면 화면에 안내합니다.
+
+`npm run build`가 앱을 빌드한 뒤 `scripts/build-single.mjs`로 원본 앱에서 이 파일을 자동 생성합니다. 별도로 손으로 수정하지 말고 src를 수정한 뒤 다시 빌드하세요. 배포 결과의 `festival.html`도 동일한 파일입니다.
+
+단일 파일 접속: https://davin-kim.github.io/gpt_webapp_test/festival.html
