@@ -1,4 +1,4 @@
-name: Deploy Document Studio to GitHub Pages
+name: Deploy Vibe Coding Notes to GitHub Pages
 
 on:
   push:
@@ -28,11 +28,11 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Test document utilities
+      - name: Test learning content and practice logic
         run: npm test
       - name: Install Chromium for document workflow checks
         run: npx playwright install --with-deps chromium
-      - name: Verify memory-only text editing with file and storage APIs blocked
+      - name: Verify learning navigation, search and interactive exercises
         run: CHROMIUM_PATH="$(node -p 'require("@playwright/test").chromium.executablePath()')" npm run test:e2e
       - name: Build site
         run: npm run build

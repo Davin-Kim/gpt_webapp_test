@@ -2,7 +2,7 @@ import {readFile,readdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 const root=resolve(import.meta.dirname,'..');
 const lock=JSON.parse(await readFile(resolve(root,'package-lock.json'),'utf8'));
-const output=['Third-party software notices','문서온 uses the following open-source components. See each component license below.',''];
+const output=['Third-party software notices','Vibe Coding Notes uses the following open-source components. See each component license below.',''];
 for(const [location,info] of Object.entries(lock.packages)){
  if(!location||info.dev)continue;
  const directory=resolve(root,location);
