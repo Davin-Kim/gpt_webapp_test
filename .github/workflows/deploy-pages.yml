@@ -1,4 +1,4 @@
-name: Deploy MY MONEY to GitHub Pages
+name: Deploy Lunch Picker to GitHub Pages
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Run calculation and storage tests
+      - name: Test menu selection logic
         run: npm test
       - name: Build site
         run: npm run build
