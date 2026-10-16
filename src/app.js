@@ -1,257 +1,176 @@
 import "./style.css";
-import { chapters, lessons, completionChecks } from "./content.js";
-import { searchLessons, searchableText } from "./model.js";
-import { renderWidget, bindWidgets } from "./widgets.js";
-const $ = (s) => document.querySelector(s),
-  $$ = (s) => [...document.querySelectorAll(s)],
-  esc = (s) =>
-    String(s ?? "").replace(
-      /[&<>"']/g,
-      (c) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        })[c],
-    );
-const completed = new Set();
-let cleanup = () => {},
-  activeLesson = null,
-  searchIndex = -1,
-  currentResults = [];
-const practices = lessons.filter((l) =>
-  /실습|정리표|계산기|게임 만들기|체크리스트/.test(l.title),
-);
-document.querySelector("#app").innerHTML =
-  `<a class="skip" href="#main">본문으로 바로가기</a><header class="site-header"><a class="brand" href="#/"><span class="brand-icon">v<span>.</span></span><div>바이브코딩 노트<small>말로 시작하는 나의 첫 웹앱</small></div></a><nav aria-label="상단 메뉴"><a href="#/" data-top="home">전체 목차</a><a href="#/practice" data-top="practice">실습 모아보기</a></nav><div class="header-search"><span class="search-symbol" aria-hidden="true">⌕</span><label class="sr-only" for="site-search">학습 내용 검색</label><input id="site-search" type="search" placeholder="궁금한 내용을 검색하세요" autocomplete="off" aria-expanded="false" aria-controls="search-results"><kbd>Ctrl K</kbd><div id="search-results" hidden></div></div><button id="menu-toggle" aria-label="학습 메뉴 열기" aria-expanded="false">☰</button></header><div class="site-layout"><aside id="sidebar"><div class="sidebar-label">LEARNING GUIDE <span>기초 과정</span></div><a class="nav-home" href="#/">▦ <span>전체 학습 목차</span><b>24</b></a><div id="chapter-nav"></div><div class="session-progress"><div><strong>나의 학습 여정</strong><span id="progress-numbers">0 / 24</span></div><div class="progress-track"><i id="progress-fill"></i></div><p>완료 표시는 이 탭에서만 유지돼요.</p></div><a class="sidebar-security" href="#/learn/security"><span>▣</span><div>시작 전 보안 수칙<small>민감한 정보는 넣지 않아요</small></div><span>↗</span></a><div class="sidebar-source">원문 강사 · 박상향<br>43쪽 교안을 웹 학습용으로 재구성</div></aside><main id="main" tabindex="-1"></main></div><dialog id="prompt-dialog"><button id="close-prompt" aria-label="요청문 닫기">×</button><span class="eyebrow">PROMPT NOTE</span><h2 id="prompt-title"></h2><p>아래 문장을 선택하고 Ctrl+C / ⌘C로 직접 복사하세요.</p><textarea id="prompt-text" readonly rows="14" aria-label="선택할 요청문"></textarea><button id="select-prompt" class="button primary">요청문 전체 선택</button><span class="small-note">외부 AI를 호출하거나 클립보드 권한을 요청하지 않습니다.</span></dialog>`;
-function nav() {
-  const chapter = activeLesson?.chapter || location.hash.split("/")[2];
-  $("#chapter-nav").innerHTML = chapters
-    .map(
-      (ch) =>
-        `<div class="nav-chapter ${chapter === ch.id ? "expanded" : ""}"><a href="#/chapter/${ch.id}" class="nav-chapter-title ${chapter === ch.id ? "current" : ""}"><span>${ch.number}</span><b>${ch.short}</b><small>⌄</small></a>${chapter === ch.id ? `<div class="nav-lessons">${ch.lessons.map((l) => `<a href="#/learn/${l.id}" class="${activeLesson?.id === l.id ? "current" : ""}"><i>${completed.has(l.id) ? "✓" : "·"}</i>${l.title}</a>`).join("")}</div>` : ""}</div>`,
-    )
+import { programs, filterPrograms } from "./model.js";
+import { art } from "./art.js";
+const $ = (s) => document.querySelector(s);
+let filter = "전체";
+let favorites = [];
+const icons = { 재현: "旌", 공연: "樂", "참여·체험": "藝" };
+document.querySelector("#app").innerHTML = `
+<a class="skip" href="#main">본문으로 바로가기</a><div class="demo-bar">제16회 안산읍성문화예술제 <span>· 제공 포스터 기반 행사 안내</span></div>
+<header><a class="logo" href="#home" aria-label="안산읍성문화예술제 처음으로"><span class="seal">安<br>山</span><span>안산읍성<br><b>문화예술제</b></span></a><nav aria-label="주 메뉴"><a href="#about">축제 소개</a><a href="#program">프로그램</a><a href="#artists">출연진</a><a href="#visit">오시는 길</a><a href="#notice">관람 안내</a></nav><button class="header-cta" id="my-schedule">나의 축제 일정 <span id="saved-count">${favorites.length}</span></button><button id="menu-toggle" aria-expanded="false" aria-label="메뉴 열기">☰</button></header>
+<main id="main"><section class="hero" id="home"><div class="hero-ghost" aria-hidden="true">正</div><div class="hero-copy"><div class="edition"><span>THE 16TH</span> ANSAN EUPSEONG CULTURE & ARTS FESTIVAL</div><p class="hero-kicker">시간을 넘어, 지금 우리 곁으로</p><h1>안산읍성<br>문화<span class="serif">예술</span>제<span class="title-dot">.</span></h1><p class="hero-desc">왕의 발걸음이 머문 곳,<br>우리의 가을이 시작됩니다.</p><div class="hero-meta"><strong>2026. 10. 17<span>토</span></strong><p>11:00 — 17:00 <i></i> 안산읍성 일원</p></div><a href="#program" class="button red">축제 프로그램 살펴보기 <span>↗</span></a></div><div class="hero-visual">${art}<div class="vertical-copy">정조대왕 능행차 공동재현</div></div><div class="hero-bottom"><span>전통의 멋, 오늘의 흥. 안산에서 만나는 특별한 하루</span><a href="#about">SCROLL TO EXPLORE ↓</a></div></section>
+<section class="quick-info" aria-label="행사 핵심 정보"><div><small>WHEN · 일시</small><strong>10월 17일 토요일</strong><span>2026 · 11:00 ~ 17:00</span></div><div><small>WHERE · 장소</small><strong>안산읍성 일원</strong><span>능행차 구간 · 안산초교 ~ 안산읍성</span></div><div><small>WITH · 함께하는 곳</small><strong>안산시 · 안산문화원</strong><span>주최 안산시 · 주관 안산문화원</span></div><a href="#visit" class="quick-arrow" aria-label="오시는 길 확인">↗</a></section>
+<section id="about" class="section about"><div class="section-label"><span>01</span> ABOUT THE FESTIVAL</div><div class="about-grid"><div><h2>오래된 성곽에<br>새로운 <em>이야기</em>가 피어나다.</h2><div class="small-seal" aria-hidden="true">온고<br>지신</div></div><div class="about-text"><p class="lead">경기도 기념물 제127호,<br>안산읍성 및 관아지에서 만나는 역사.</p><p>안산시가 주최하고 안산문화원이 주관하는 안산읍성문화예술제. 과거 안산의 행정과 지역사회의 흔적을 간직한 안산읍성과 관아지를 무대로, 조선 왕실의 의례와 행렬 문화를 시민 곁에 되살립니다. 정조대왕 능행차 공동재현부터 가을빛 버스킹과 천년안산 음악회까지. 우리 곁의 문화유산을 오늘의 즐거움으로 만나보세요.</p><p>어린이부터 성인까지 함께하는 문화체험, 자신만의 시선으로 지역의 풍경과 문화유산을 표현하는 ‘다함께 수암마을 그리기’. 가을의 한가운데에서 오래 기억할 하루를 만들어갑니다.</p><a href="https://weekly.hankooki.com/news/articleViewAmp.html?idxno=7189067" target="_blank" rel="noopener noreferrer" class="text-link">관련 기사 원문 보기 ↗</a></div></div><div class="feature-strip"><article><span>01 / HISTORY</span><h3>왕의 길을 걷다</h3><p>정조대왕 능행차 공동재현</p></article><article><span>02 / MUSIC</span><h3>가을의 흥을 나누다</h3><p>천년안산 음악회 · 가을빛 버스킹</p></article><article><span>03 / TOGETHER</span><h3>우리의 문화를 잇다</h3><p>문화체험 한마당 · 수암마을 그리기</p></article></div></section>
+<section id="program" class="section program"><div class="section-label"><span>02</span> FESTIVAL PROGRAM</div><div class="section-heading"><div><h2>취향대로 만나는<br><em>축제의 순간들</em></h2><p>2026년 10월 17일, 하루를 가득 채울 이야기.</p></div><button id="calendar" class="button outline">전체 시간표 보기 ↗</button></div><div class="program-toolbar"><div class="tabs" role="tablist" aria-label="프로그램 종류">${["전체", "재현", "공연", "참여·체험"].map((t, i) => `<button role="tab" aria-selected="${!i}" data-filter="${t}">${t}</button>`).join("")}</div><span>마음에 드는 프로그램의 ＋를 눌러 담아보세요.</span></div><div id="program-grid" class="program-grid" role="tabpanel"></div><p class="source-note">일시·프로그램명은 제공 포스터 기준입니다. 세부 장소가 없는 프로그램은 행사장으로 표기했습니다.</p></section>
+<section class="parade-banner"><span class="banner-character" aria-hidden="true">行</span><div><span class="eyebrow">THE HIGHLIGHT</span><h2>그날의 행렬이,<br>오늘의 축제가 되다.</h2><p>정조대왕 능행차 공동재현<br>11:00 ~ 11:40 · 안산초교 → 안산읍성</p><button class="button cream" data-detail="parade">능행차 자세히 보기 ↗</button></div><div class="procession" aria-hidden="true">${Array.from({ length: 5 }, (_, i) => `<div class="guard g${i}"><i></i><b></b><span></span><em></em></div>`).join("")}</div></section>
+<section id="artists" class="section artists"><div class="section-label"><span>03</span> ON STAGE</div><div class="section-heading"><div><h2>가을을 물들이는 <em>목소리</em></h2><p>천년안산 음악회와 함께하는 포스터 속 출연진.</p></div><span class="artist-time">14:00 — 17:00 <b>천년안산 음악회</b></span></div><div class="artist-grid">${["청춘소년단", "권민정", "문초희", "김재혁", "오혜빈", "김보민"].map((name, i) => `<article class="artist a${i}"><div class="artist-graphic" aria-hidden="true"><span>${["樂", "聲", "歌", "律", "韻", "和"][i]}</span><i></i><b>ON STAGE / 0${i + 1}</b></div><h3>${name}</h3><p>초대 출연진</p></article>`).join("")}</div><p class="source-note">출연진은 포스터 표기 기준이며 개별 출연 순서는 안내되지 않았습니다. 인물 사진 대신 전통 글자를 활용한 그래픽을 사용했습니다.</p></section>
+<section id="visit" class="section visit"><div class="section-label"><span>04</span> PLAN YOUR VISIT</div><div class="visit-grid"><div><h2>가을 나들이,<br><em>안산읍성</em>으로 오세요.</h2><p class="visit-intro">행사의 시작부터 마지막 여운까지,<br>여유롭게 머물다 가세요.</p><dl><div><dt>행사 장소</dt><dd>안산읍성 일원</dd></div><div><dt>능행차 구간</dt><dd>안산초교 → 안산읍성</dd></div><div><dt>운영 시간</dt><dd>2026. 10. 17. (토) 11:00 ~ 17:00</dd></div></dl><p class="source-note">대중교통 노선·주차·통제 정보는 제공 자료에 없어 확정 안내하지 않습니다. 방문 전 실제 공지를 확인하세요.</p><a class="button dark" target="_blank" rel="noopener noreferrer" href="https://map.kakao.com/?q=${encodeURIComponent("안산읍성")}">지도에서 위치 찾기 ↗</a></div><div class="map-card"><div class="map-caption">ANSAN EUPSEONG <span>도식 · 실제 축척 아님</span></div><svg viewBox="0 0 530 400" role="img" aria-label="안산초교에서 안산읍성으로 이어지는 능행차 구간 개념도"><rect width="530" height="400" fill="#e8e7db"/><path d="M300-20Q170 80 345 175T410 440" stroke="#c8d2bc" stroke-width="125" fill="none"/><path d="M-20 260L570 110M120-30L240 430M-20 340L570 280" stroke="#faf6ed" stroke-width="23" fill="none"/><path d="M165 287L230 266L285 189L354 163" stroke="#d94c3d" stroke-width="4" stroke-dasharray="7 7" fill="none"/><circle cx="165" cy="287" r="8" fill="#42649c"/><rect x="85" y="306" width="120" height="37" rx="4" fill="#fff9f0"/><text x="145" y="331" text-anchor="middle" font-size="15" fill="#36352e">안산초교 · 출발</text><circle cx="354" cy="163" r="21" fill="#cf3d32"/><path d="M343 169H366M345 160H364M350 154H359" stroke="#fff5e9" stroke-width="3"/><rect x="299" y="106" width="115" height="32" rx="4" fill="#fff9f0"/><text x="356" y="128" text-anchor="middle" font-size="15" fill="#36352e">안산읍성 · 도착</text><text x="40" y="50" font-size="13" fill="#85897d">N ↑</text></svg><div class="map-bottom"><span><i></i> 능행차 진행 방향</span><small>이동 동선의 이해를 돕기 위한 시연용 도식입니다.</small></div></div></div></section>
+<section id="notice" class="section notice"><div class="section-label"><span>05</span> FESTIVAL GUIDE</div><div class="notice-grid"><div><h2>함께 즐기는 축제,<br><em>미리 알아두세요.</em></h2><p>기분 좋은 하루를 위한 작은 안내.</p><span class="demo-label">관람 정보는 제공 자료에서 확인된 범위로 안내합니다.</span></div><div class="faq">${[
+  [
+    "관람료와 사전 예약이 필요한가요?",
+    "관람료와 예약 여부는 포스터에 안내되지 않았습니다. 방문 전 주최 측의 최신 안내를 확인해 주세요.",
+  ],
+  [
+    "아이와 함께 참여할 수 있나요?",
+    "문화체험 한마당과 다함께 수암마을 그리기를 가족이 함께 즐기는 프로그램으로 소개합니다. 실제 참여 연령, 재료비와 접수 방법은 별도 확인이 필요합니다.",
+  ],
+  [
+    "우천 시에도 진행하나요?",
+    "기상 상황에 따른 운영 방침은 제공 자료에 없습니다. 방문 전 주최 측 최신 공지를 확인해 주세요.",
+  ],
+  [
+    "나의 축제 일정은 어떻게 사용하나요?",
+    "프로그램 카드의 ＋ 버튼을 누르면 현재 탭에서 관심 일정을 모아볼 수 있습니다. 새로고침하면 초기화됩니다. 상단의 ‘나의 축제 일정’에서 모아보거나 삭제할 수 있습니다. 예약이나 참가 신청 기능은 아닙니다.",
+  ],
+]
+  .map(
+    ([q, a]) =>
+      `<details><summary>${q}<span>＋</span></summary><p>${a}</p></details>`,
+  )
+  .join("")}</div></div></section>
+<section class="closing"><span>2026. 10. 17. SAT</span><h2>우리의 가을이 만나는 곳,<br>안산읍성문화예술제.</h2><a href="#home">처음으로 돌아가기 ↑</a></section></main><footer><div class="footer-brand">안산읍성문화예술제 <span>제16회</span></div><p>주최 · 안산시　 주관 · 안산문화원</p><div class="footer-bottom"><p>AI 디자인 시연 사이트 · 실제 공식 홈페이지가 아닙니다.<br>자료: 주간한국 장지원 기자 기사(사용자 제공 본문) · 행사 포스터.<br>프로그램 상세 소개는 안내를 위해 작성했으며, 동선은 실제 축척이 아닌 개념도입니다.</p><span>© 2026 FESTIVAL DESIGN DEMO</span></div></footer><dialog id="modal"><button class="modal-close" aria-label="닫기">×</button><div id="modal-content"></div></dialog><div id="toast" role="status"></div>`;
+function toast(message) {
+  $("#toast").textContent = message;
+  $("#toast").classList.add("show");
+  setTimeout(() => $("#toast").classList.remove("show"), 3000);
+}
+function showModal(content) {
+  $("#modal-content").innerHTML = content;
+  $("#modal").showModal();
+  bindCards($("#modal"));
+}
+function programCard(p) {
+  return `<article class="program-card"><div class="program-card-head"><span class="type-tag">${p.type}</span><button class="save ${favorites.includes(p.id) ? "selected" : ""}" data-save="${p.id}" aria-label="${p.title} ${favorites.includes(p.id) ? "일정에서 삭제" : "일정에 담기"}" aria-pressed="${favorites.includes(p.id)}">${favorites.includes(p.id) ? "✓" : "＋"}</button></div><span class="card-symbol" aria-hidden="true">${icons[p.type]}</span><div class="card-content"><time>${p.time}</time><h3>${p.title}</h3><p>${p.place}</p><button class="detail" data-detail="${p.id}">프로그램 자세히 <span>↗</span></button></div></article>`;
+}
+function renderPrograms() {
+  $("#program-grid").innerHTML = filterPrograms(filter)
+    .map(programCard)
     .join("");
-  $("#progress-numbers").textContent = `${completed.size} / ${lessons.length}`;
-  $("#progress-fill").style.width =
-    (completed.size / lessons.length) * 100 + "%";
-  $$("[data-top]").forEach((a) =>
-    a.classList.toggle(
-      "active",
-      a.dataset.top === "practice"
-        ? location.hash.startsWith("#/practice")
-        : !location.hash || location.hash === "#/",
-    ),
+  bindCards($("#program-grid"));
+  $("#saved-count").textContent = favorites.length;
+}
+function schedule() {
+  showModal(
+    `<span class="eyebrow">MY FESTIVAL</span><h2>나의 축제 일정</h2><p class="modal-intro">이 탭에서만 유지됩니다 · 새로고침 시 초기화 · 참가 예약이 아닙니다.</p><div class="saved-list">${
+      programs
+        .filter((p) => favorites.includes(p.id))
+        .map(
+          (p) =>
+            `<article><time>${p.time}</time><h3>${p.title}</h3><p>${p.place}</p><button data-save="${p.id}" data-in-schedule="true">일정에서 삭제</button></article>`,
+        )
+        .join("") ||
+      '<p class="no-saved">아직 담은 일정이 없습니다.<br>프로그램의 ＋ 버튼으로 나만의 축제를 만들어보세요.</p>'
+    }</div>`,
   );
 }
-function footer() {
-  return `<footer class="footer"><div><b>바이브코딩 노트</b><span>생성형 AI 바이브 코딩 기초 · 학습용 재구성</span></div><p>원문 강사 박상향 · PDF 43쪽 기반<br>파일 업로드·다운로드·자동 저장 없이 동작합니다.</p></footer>`;
-}
-function chapterCard(ch) {
-  return `<section class="chapter-card ${ch.color}" id="chapter-${ch.id}"><div class="chapter-card-head"><div class="chapter-icon">${ch.icon}</div><span>CHAPTER ${ch.number}</span><small>원문 ${ch.range}쪽</small></div><a href="#/chapter/${ch.id}" class="chapter-heading"><h2>${ch.short}</h2><span>↗</span></a><p>${ch.description}</p><div class="chapter-links">${ch.lessons.map((l, i) => `<a href="#/learn/${l.id}"><span class="lesson-number">${ch.number}.${String(i + 1).padStart(2, "0")}</span><span>${l.title}</span><i>${completed.has(l.id) ? "✓" : "→"}</i></a>`).join("")}</div><div class="chapter-card-footer"><span>${ch.lessons.length}개의 학습 노트</span><a href="#/learn/${ch.lessons[0].id}">이 장 시작하기 →</a></div></section>`;
-}
-function home() {
-  return `<div class="home-content"><div class="breadcrumb">학습 가이드 <span>/</span> 전체 목차</div><section class="hero"><div class="hero-copy"><span class="pill"><i></i> 코딩이 처음이어도 괜찮아요</span><h1>말로 시작하는<br><em>나의 첫 웹앱.</em></h1><p>아이디어를 설명하고, AI와 함께 만들고, 직접 확인하기.<br>필요한 내용을 골라 읽으며 작은 도구 하나를 완성해 보세요.</p><div class="hero-actions"><a href="#/learn/what-is-vibe" class="button primary">처음부터 시작하기 <span>↗</span></a><a href="#/practice" class="hero-secondary">실습 먼저 살펴보기 →</a></div><div class="hero-meta"><span><b>5</b>개 챕터</span><span><b>24</b>개 학습 노트</span><span><b>43</b>쪽 교안 기반</span></div></div><div class="hero-visual" aria-hidden="true"><div class="visual-orbit orbit1"></div><div class="visual-orbit orbit2"></div><span class="visual-spark">✳</span><div class="floating-label">아이디어가 있다면, 시작할 준비 끝!</div><div class="chat-note"><span>나의 아이디어</span><p>내 업무에 필요한<br>작은 웹앱을 만들어 줘.</p><i>↗</i></div><div class="mini-app"><div class="mini-app-top"><span>•••</span><b>나의 첫 웹앱</b><i>↗</i></div><div class="mini-app-body"><div class="mini-line w1"></div><div class="mini-input"></div><div class="mini-input short"></div><div class="mini-button">아이디어를 화면으로 ✦</div><div class="mini-done">✓ &nbsp; 조금씩 고치며 완성해요</div></div></div><div class="floating-chip">✦ 설명 → 실행 → 확인</div></div></section><div class="learning-note"><span>✦</span><p><strong>정답 순서는 하나가 아니에요.</strong> 처음이라면 1장부터, 필요한 내용이 있다면 목차나 검색으로 바로 이동하세요.</p></div><section class="curriculum"><div class="section-title"><div><span class="eyebrow">YOUR LEARNING MAP</span><h2>어떤 것부터 알아볼까요?</h2></div><span>목차를 누르면 바로 읽을 수 있어요</span></div><div class="chapter-grid">${chapters.map(chapterCard).join("")}</div></section><section class="quick-path"><div><span class="eyebrow">QUICK START</span><h2>지금 필요한 내용부터.</h2><p>막히는 순간 바로 꺼내 볼 수 있는 노트들.</p></div><div>${[
-    ["prompt-template", "✎", "요청문 템플릿", "괄호를 채워 시작하기"],
-    ["debugging", "↻", "오류가 생겼다면", "본 그대로 알리고 고치기"],
-    ["security", "▣", "안전하게 활용하기", "업무 시작 전 보안 수칙"],
-  ]
-    .map(
-      ([id, icon, t, d]) =>
-        `<a href="#/learn/${id}"><span>${icon}</span><div><h3>${t}</h3><p>${d}</p></div><i>↗</i></a>`,
-    )
-    .join("")}</div></section>${footer()}</div>`;
-}
-function chapterPage(id) {
-  const ch = chapters.find((c) => c.id === id);
-  if (!ch) return notFound();
-  return `<div class="index-content"><div class="breadcrumb"><a href="#/">전체 목차</a><span>/</span> ${ch.number}장</div><div class="index-hero ${ch.color}"><span class="eyebrow">CHAPTER ${ch.number} · 원문 ${ch.range}쪽</span><h1>${ch.title}</h1><p>${ch.description}</p><a class="button primary" href="#/learn/${ch.lessons[0].id}">첫 노트 읽기 →</a></div><div class="chapter-lessons">${ch.lessons.map((l, i) => `<a href="#/learn/${l.id}"><span class="index-number">${String(i + 1).padStart(2, "0")}</span><div><h2>${l.title}</h2><p>${l.summary}</p><small>원문 ${l.pages}쪽</small></div><span>${completed.has(l.id) ? "✓" : "↗"}</span></a>`).join("")}</div>${footer()}</div>`;
-}
-function practicePage() {
-  return `<div class="index-content"><div class="breadcrumb"><a href="#/">전체 목차</a><span>/</span> 실습 모아보기</div><div class="index-hero peach"><span class="eyebrow">LEARN BY DOING</span><h1>직접 해보면,<br>조금 더 쉬워져요.</h1><p>첫 요청부터 정리표, 계산 확인, 게임 만들기까지.</p></div><div class="chapter-lessons">${practices.map((l, i) => `<a href="#/learn/${l.id}"><span class="index-number">${String(i + 1).padStart(2, "0")}</span><div><small>${l.chapterNumber}장 · 원문 ${l.pages}쪽</small><h2>${l.title}</h2><p>${l.summary}</p></div><span>↗</span></a>`).join("")}</div>${footer()}</div>`;
-}
-function renderBlock(b, index) {
-  if (b.type === "paragraph") return `<p class="article-p">${esc(b.text)}</p>`;
-  if (b.type === "note")
-    return `<aside class="callout ${b.extra ? "supplement" : ""}"><span>${b.extra ? "＋" : "✦"}</span><div><strong>${esc(b.title)}</strong><p>${esc(b.text)}</p></div></aside>`;
-  if (b.type === "list" || b.type === "steps")
-    return `<section class="content-block"><h2>${esc(b.title)}</h2><div class="${b.type === "steps" ? "step-list" : "concept-list"}">${b.items.map(([t, d], i) => `<div><span>${b.type === "steps" ? String(i + 1).padStart(2, "0") : "✓"}</span><div><h3>${esc(t)}</h3><p>${esc(d)}</p></div></div>`).join("")}</div></section>`;
-  if (b.type === "table")
-    return `<section class="content-block"><h2>${esc(b.title)}</h2><div class="table-wrap"><table><thead><tr>${b.headers.map((x) => `<th>${esc(x)}</th>`).join("")}</tr></thead><tbody>${b.rows.map((row) => `<tr>${row.map((cell) => `<td>${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>`;
-  if (b.type === "prompt")
-    return `<section class="prompt-block"><div><span>✎ ${esc(b.title)}</span><button data-prompt="${index}">요청문 선택 ↗</button></div><pre>${esc(b.text)}</pre></section>`;
-  if (b.type === "widget") return renderWidget(b.kind);
-  return "";
-}
-function lessonPage(l) {
-  const at = lessons.findIndex((x) => x.id === l.id),
-    prev = lessons[at - 1],
-    next = lessons[at + 1];
-  return `<div class="lesson-layout"><article class="lesson-article"><div class="breadcrumb"><a href="#/">전체 목차</a><span>/</span><a href="#/chapter/${l.chapter}">${l.chapterNumber}장</a><span>/</span> ${String(l.position).padStart(2, "0")}</div><header class="lesson-header"><span class="pill ${l.color}">CHAPTER ${l.chapterNumber} · ${esc(l.chapterTitle)}</span><h1>${esc(l.title)}</h1><p>${esc(l.summary)}</p><div class="lesson-meta"><span>원문 ${l.pages}쪽</span><span>강사 박상향 교안 재구성</span></div></header><div class="article-content">${l.blocks.map(renderBlock).join("")}</div><div class="completion-box"><div><b>이 노트, 이해하셨나요?</b><p>완료를 표시하고 다음 내용으로 이어가세요.</p></div><button id="complete-lesson" class="button ${completed.has(l.id) ? "completed" : "primary"}">${completed.has(l.id) ? "✓ 학습 완료" : "학습 완료로 표시"}</button></div><div class="lesson-pagination">${prev ? `<a href="#/learn/${prev.id}"><small>← 이전 노트</small><strong>${esc(prev.title)}</strong></a>` : "<div></div>"}${next ? `<a href="#/learn/${next.id}"><small>다음 노트 →</small><strong>${esc(next.title)}</strong></a>` : '<a href="#/"><small>전체 과정을 살펴봤어요</small><strong>목차로 돌아가기 →</strong></a>'}</div>${footer()}</article><aside class="lesson-right"><span>이 노트의 핵심</span><ul>${l.tags
-    .slice(0, 5)
-    .map((t) => `<li>${esc(t)}</li>`)
-    .join(
-      "",
-    )}</ul><div class="source-label">PDF ${l.pages}쪽 기반<p>원문을 읽기 쉽게 재구성했습니다. 추가한 설명은 ‘보충’으로 구분합니다.</p></div><a href="#/learn/security">업무에 쓰기 전 보안 수칙 ↗</a></aside></div>`;
-}
-function notFound() {
-  return `<div class="not-found"><span>404</span><h1>찾으시는 학습 노트가 없어요.</h1><p>전체 목차에서 내용을 다시 골라주세요.</p><a href="#/" class="button primary">전체 목차로 돌아가기</a></div>`;
-}
-function render() {
-  cleanup();
-  cleanup = () => {};
-  activeLesson = null;
-  let route;
-  try {
-    route = (location.hash || "#/")
-      .slice(1)
-      .split("/")
-      .filter(Boolean)
-      .map(decodeURIComponent);
-  } catch {
-    route = ["invalid"];
-  }
-  if (route[0] === "learn") {
-    activeLesson = lessons.find((l) => l.id === route[1]);
-    $("#main").innerHTML = activeLesson ? lessonPage(activeLesson) : notFound();
-  } else if (route[0] === "chapter")
-    $("#main").innerHTML = chapterPage(route[1]);
-  else if (route[0] === "practice") $("#main").innerHTML = practicePage();
-  else $("#main").innerHTML = route.length ? notFound() : home();
-  nav();
-  cleanup = bindWidgets($("#main"));
-  $$("[data-prompt]").forEach(
+function bindCards(root) {
+  root.querySelectorAll("[data-detail]").forEach(
     (b) =>
       (b.onclick = () => {
-        const block = activeLesson.blocks[Number(b.dataset.prompt)];
-        $("#prompt-title").textContent = block.title;
-        $("#prompt-text").value = block.text;
-        $("#prompt-dialog").showModal();
-        $("#prompt-text").select();
+        const p = programs.find((p) => p.id === b.dataset.detail);
+        showModal(
+          `<span class="eyebrow">${p.type} · ${p.tag}</span><h2>${p.title}</h2><div class="modal-meta">10월 17일 (토) ${p.time}<br>${p.place}</div><p class="modal-description">${p.description}</p><p class="source-note">시간·명칭: 포스터 기준 / 세부 운영 방식은 현장 안내를 확인하세요.</p><button class="button red" data-save="${p.id}">${favorites.includes(p.id) ? "관심 일정에서 삭제" : "나의 일정에 담기 ＋"}</button>`,
+        );
       }),
   );
-  if ($("#complete-lesson"))
-    $("#complete-lesson").onclick = () => {
-      if (completed.has(activeLesson.id)) completed.delete(activeLesson.id);
-      else completed.add(activeLesson.id);
-      nav();
-      $("#complete-lesson").className =
-        "button " + (completed.has(activeLesson.id) ? "completed" : "primary");
-      $("#complete-lesson").textContent = completed.has(activeLesson.id)
-        ? "✓ 학습 완료"
-        : "학습 완료로 표시";
-    };
-  $("#sidebar").classList.remove("mobile-open");
-  $("#menu-toggle").setAttribute("aria-expanded", "false");
-  $("#menu-toggle").setAttribute("aria-label", "학습 메뉴 열기");
-  document.title = activeLesson
-    ? activeLesson.title + " · 바이브코딩 노트"
-    : "생성형 AI 바이브코딩 기초 · 바이브코딩 노트";
-  window.scrollTo({ top: 0, behavior: "instant" });
-  $("#main").scrollTop = 0;
+  root.querySelectorAll("[data-save]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const key = b.dataset.save,
+          next = favorites.includes(key)
+            ? favorites.filter((x) => x !== key)
+            : [...favorites, key];
+
+        favorites = next;
+        renderPrograms();
+        if ($("#modal").open) {
+          $("#modal").close();
+          if (b.dataset.inSchedule) schedule();
+        }
+        toast(
+          next.includes(key)
+            ? "나의 축제 일정에 담았습니다."
+            : "관심 일정에서 삭제했습니다.",
+        );
+      }),
+  );
 }
-function snippet(l, q) {
-  const blocks = l.blocks
-    .map(
-      (b) =>
-        b.text ||
-        b.title ||
-        b.items?.flat().join(" ") ||
-        b.rows?.flat().join(" ") ||
-        "",
+renderPrograms();
+bindCards($(".parade-banner"));
+$(".modal-close").onclick = () => $("#modal").close();
+$("#modal").onclick = (e) => {
+  if (e.target === $("#modal")) {
+    const r = $("#modal").getBoundingClientRect();
+    if (
+      e.clientX < r.left ||
+      e.clientX > r.right ||
+      e.clientY < r.top ||
+      e.clientY > r.bottom
     )
-    .join(" ");
-  const word = q.trim().split(/\s+/)[0] || "";
-  const at = blocks.toLocaleLowerCase().indexOf(word.toLocaleLowerCase());
-  const text =
-    at >= 0 ? blocks.slice(Math.max(0, at - 28), at + 95) : l.summary;
-  const pos = text.toLocaleLowerCase().indexOf(word.toLocaleLowerCase());
-  return pos >= 0
-    ? esc(text.slice(0, pos)) +
-        `<mark>${esc(text.slice(pos, pos + word.length))}</mark>` +
-        esc(text.slice(pos + word.length))
-    : esc(text);
-}
-function closeSearch() {
-  $("#search-results").hidden = true;
-  $("#site-search").setAttribute("aria-expanded", "false");
-  searchIndex = -1;
-}
-function search() {
-  const q = $("#site-search").value.trim();
-  if (!q) {
-    closeSearch();
-    return;
-  }
-  currentResults = searchLessons(q);
-  searchIndex = -1;
-  $("#search-results").innerHTML =
-    `<div class="search-heading"><span>검색 결과 <b>${currentResults.length}</b></span><button id="clear-search">닫기 ×</button></div>${currentResults.length ? `<div class="search-items">${currentResults.map((l, i) => `<a href="#/learn/${l.id}" data-result="${i}"><span>${l.chapterNumber}장 · 원문 ${l.pages}쪽</span><h3>${esc(l.title)}</h3><p>${snippet(l, q)}</p></a>`).join("")}</div>` : `<div class="no-results"><strong>검색 결과가 없습니다.</strong><p>‘프롬프트’, ‘출장비’, ‘보안’처럼 다른 단어로 찾아보세요.</p></div>`}<div class="search-hint">↑ ↓ 이동 <span>Enter 열기 · Esc 닫기</span></div>`;
-  $("#search-results").hidden = false;
-  $("#site-search").setAttribute("aria-expanded", "true");
-  $("#clear-search").onclick = closeSearch;
-  $$("[data-result]").forEach((a) => (a.onclick = closeSearch));
-}
-$("#site-search").oninput = search;
-$("#site-search").onfocus = () => {
-  if ($("#site-search").value.trim()) search();
-};
-$("#site-search").onkeydown = (e) => {
-  const items = $$("[data-result]");
-  if (e.key === "Escape") {
-    closeSearch();
-    return;
-  }
-  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-    e.preventDefault();
-    if (!items.length) return;
-    searchIndex =
-      e.key === "ArrowDown"
-        ? (searchIndex + 1) % items.length
-        : (searchIndex + items.length - 1) % items.length;
-    items.forEach((a, i) => a.classList.toggle("focused", i === searchIndex));
-    items[searchIndex].scrollIntoView({ block: "nearest" });
-  }
-  if (e.key === "Enter" && items.length) {
-    e.preventDefault();
-    location.hash = items[Math.max(0, searchIndex)].getAttribute("href");
-    closeSearch();
-    $("#site-search").blur();
+      $("#modal").close();
   }
 };
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".header-search")) closeSearch();
-});
-document.addEventListener("keydown", (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-    e.preventDefault();
-    $("#site-search").focus();
-    $("#site-search").select();
-  }
-});
+$("#my-schedule").onclick = schedule;
+document.querySelectorAll("[data-filter]").forEach(
+  (b) =>
+    (b.onclick = () => {
+      filter = b.dataset.filter;
+      document
+        .querySelectorAll("[data-filter]")
+        .forEach((t) => t.setAttribute("aria-selected", String(t === b)));
+      renderPrograms();
+    }),
+);
 $("#menu-toggle").onclick = () => {
-  const open = $("#sidebar").classList.toggle("mobile-open");
+  const open = $("#menu-toggle").getAttribute("aria-expanded") !== "true";
   $("#menu-toggle").setAttribute("aria-expanded", String(open));
   $("#menu-toggle").setAttribute(
     "aria-label",
-    open ? "학습 메뉴 닫기" : "학습 메뉴 열기",
+    open ? "메뉴 닫기" : "메뉴 열기",
   );
+  $("nav").classList.toggle("open", open);
 };
-$("#close-prompt").onclick = () => $("#prompt-dialog").close();
-$("#select-prompt").onclick = () => $("#prompt-text").select();
-$("#prompt-dialog").onclick = (e) => {
-  if (e.target === $("#prompt-dialog")) {
-    const b = $("#prompt-dialog").getBoundingClientRect();
-    if (
-      e.clientX < b.left ||
-      e.clientX > b.right ||
-      e.clientY < b.top ||
-      e.clientY > b.bottom
-    )
-      $("#prompt-dialog").close();
-  }
-};
-window.addEventListener("hashchange", render);
-render();
+document.querySelectorAll("nav a").forEach(
+  (a) =>
+    (a.onclick = () => {
+      $("nav").classList.remove("open");
+      $("#menu-toggle").setAttribute("aria-expanded", "false");
+      $("#menu-toggle").setAttribute("aria-label", "메뉴 열기");
+    }),
+);
+$("#calendar").onclick = () =>
+  showModal(
+    `<span class="eyebrow">2026. 10. 17. SAT</span><h2>하루의 시간표</h2><p class="modal-intro">11:00 ~ 17:00 · 안산읍성 일원</p><div class="saved-list">${[
+      ...programs,
+    ]
+      .sort((a, b) => a.start.localeCompare(b.start))
+      .map(
+        (p) =>
+          `<article><time>${p.time}</time><h3>${p.title}</h3><p>${p.place}</p><button data-detail="${p.id}">자세히 보기 ↗</button></article>`,
+      )
+      .join("")}</div>`,
+  );
+const tabs = [...document.querySelectorAll("[role=tab]")];
+tabs.forEach(
+  (t, i) =>
+    (t.onkeydown = (e) => {
+      let j;
+      if (e.key === "ArrowRight") j = (i + 1) % tabs.length;
+      if (e.key === "ArrowLeft") j = (i + tabs.length - 1) % tabs.length;
+      if (j !== undefined) {
+        e.preventDefault();
+        tabs[j].focus();
+        tabs[j].click();
+      }
+    }),
+);

@@ -1,96 +1,107 @@
-import { lessons } from "./content.js";
-export const normalize = (s) =>
-  String(s)
-    .normalize("NFKC")
-    .toLocaleLowerCase()
-    .replace(/[\s·.,/()[\]—–:-]/g, "");
-export function searchableText(lesson) {
-  return [
-    lesson.title,
-    lesson.summary,
-    lesson.chapterTitle,
-    ...lesson.tags,
-    ...lesson.blocks.flatMap((b) => [
-      b.title,
-      b.text,
-      ...(b.items || []).flat(),
-      ...(b.headers || []),
-      ...(b.rows || []).flat(),
-      b.kind,
-    ]),
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-export function searchLessons(query) {
-  const words = query.trim().split(/\s+/).map(normalize).filter(Boolean);
-  if (!words.length) return [];
-  return lessons
-    .map((l) => {
-      const all = normalize(searchableText(l));
-      const title = normalize(l.title),
-        tags = normalize(l.tags.join(" "));
-      if (!words.every((word) => all.includes(word))) return null;
-      return {
-        ...l,
-        score: words.reduce(
-          (n, w) =>
-            n +
-            (title.includes(w) ? 12 : 0) +
-            (tags.includes(w) ? 5 : 0) +
-            (normalize(l.summary).includes(w) ? 3 : 0) +
-            1,
-          0,
-        ),
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => b.score - a.score);
-}
-export function travelCost({ days, nights, transport, hotel }) {
-  const errors = {};
-  const values = { days, nights, transport, hotel };
-  for (const k of ["days", "nights", "transport"])
-    if (
-      String(values[k]).trim() === "" ||
-      !Number.isSafeInteger(Number(values[k])) ||
-      Number(values[k]) < (k === "days" ? 1 : 0)
-    )
-      errors[k] =
-        k === "days"
-          ? "1 이상의 정수를 입력하세요."
-          : "0 이상의 정수를 입력하세요.";
-  if (
-    Number(nights) > 0 &&
-    (String(hotel).trim() === "" ||
-      !Number.isSafeInteger(Number(hotel)) ||
-      Number(hotel) < 0)
-  )
-    errors.hotel = "숙박이 있으면 1박 숙박비를 0 이상의 정수로 입력하세요.";
-  if (Object.keys(errors).length) return { errors };
-  const daily = Number(days) * 20000,
-    lodging = Number(nights) * Math.min(Number(hotel) || 0, 70000),
-    total = daily + lodging + Number(transport);
-  if (!Number.isSafeInteger(total))
-    return { errors: { days: "계산 범위를 초과했습니다. 값을 줄여 주세요." } };
-  return {
-    daily,
-    lodging,
-    transport: Number(transport),
-    total,
-    exceeded: Number(nights) > 0 && Number(hotel) > 70000,
-    errors: {},
-  };
-}
-export const difficulty = {
-  easy: { interval: 1500, visible: 1200 },
-  normal: { interval: 1000, visible: 800 },
-  hard: { interval: 650, visible: 450 },
+export const event = {
+  title: "제16회 안산읍성문화예술제",
+  date: "2026. 10. 17. 토요일",
+  time: "11:00 — 17:00",
+  place: "안산읍성 일원",
+  route: "안산초교 → 안산읍성",
 };
-export const successRate = (hits, clicks) =>
-  clicks ? Math.round((hits / clicks) * 100) : 0;
-export function nextHole(previous, random = Math.random) {
-  const offset = Math.min(7, Math.floor(random() * 8));
-  if (previous < 0) return Math.min(8, Math.floor(random() * 9));
-  return offset >= previous ? offset + 1 : offset;
+export const programs = [
+  {
+    id: "parade",
+    type: "재현",
+    time: "11:00—11:40",
+    start: "11:00",
+    end: "11:40",
+    title: "정조대왕 능행차 공동재현",
+    place: "안산초교 → 안산읍성",
+    tag: "대표 프로그램",
+    description:
+      "정조대왕의 발자취를 따라, 안산의 길 위에 역사가 다시 펼쳐집니다. 행렬을 따라 이어지는 축제의 시작을 만나보세요.",
+  },
+  {
+    id: "opening",
+    type: "공연",
+    time: "11:40—12:20",
+    start: "11:40",
+    end: "12:20",
+    title: "개막식",
+    place: "행사장",
+    tag: "함께 여는 축제",
+    description:
+      "제16회 안산읍성문화예술제의 시작을 함께하는 시간입니다. 전통의 멋과 오늘의 설렘이 한자리에 모입니다.",
+  },
+  {
+    id: "busking",
+    type: "공연",
+    time: "13:00—13:40",
+    start: "13:00",
+    end: "13:40",
+    title: "가을빛 버스킹",
+    place: "전시관 앞",
+    tag: "가을의 선율",
+    description:
+      "전시관 앞에 잠시 머물러 가을의 선율을 즐겨보세요. 일상의 풍경에 음악이 더해집니다.",
+  },
+  {
+    id: "concert",
+    type: "공연",
+    time: "14:00—17:00",
+    start: "14:00",
+    end: "17:00",
+    title: "천년안산 음악회",
+    place: "행사장",
+    tag: "오후의 하이라이트",
+    description:
+      "반가운 출연진과 함께하는 가을 오후의 음악회. 세대를 잇는 노래로 축제의 여운을 나눕니다.",
+  },
+  {
+    id: "community",
+    type: "참여·체험",
+    time: "11:00—13:00",
+    start: "11:00",
+    end: "13:00",
+    title: "안산동 경로잔치",
+    place: "행사장",
+    tag: "이웃과 함께",
+    description: "마을의 어르신과 이웃이 함께하는 정겨운 시간입니다.",
+  },
+  {
+    id: "culture",
+    type: "참여·체험",
+    time: "11:00—17:00",
+    start: "11:00",
+    end: "17:00",
+    title: "문화체험 한마당",
+    place: "행사장",
+    tag: "손끝으로 만나는 문화",
+    description:
+      "가족, 친구와 함께 우리 문화를 가까이 느껴보세요. 체험 종류와 참여 방식은 포스터에 안내되지 않았으니 현장 안내를 확인해 주세요.",
+  },
+  {
+    id: "drawing",
+    type: "참여·체험",
+    time: "11:00—17:00",
+    start: "11:00",
+    end: "17:00",
+    title: "다함께 수암마을 그리기",
+    place: "행사장",
+    tag: "우리 마을의 색",
+    description:
+      "각자의 시선으로 바라본 수암마을을 그림으로 남겨보는 시간입니다.",
+  },
+  {
+    id: "ras",
+    type: "참여·체험",
+    time: "11:00—17:00",
+    start: "11:00",
+    end: "17:00",
+    title: "안산읍성 RAS",
+    place: "안산읍성 일원",
+    tag: "읽고, 담고, 걷다",
+    description:
+      "가을을 읽고, 추억을 담고, 역사를 걷는 시간. 포스터에 소개된 안산읍성 RAS 프로그램입니다. 세부 참여 방식은 제공 자료에 없어 확정 안내하지 않습니다.",
+  },
+];
+export function filterPrograms(type) {
+  return type === "전체" ? programs : programs.filter((p) => p.type === type);
 }

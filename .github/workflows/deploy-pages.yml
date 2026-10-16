@@ -1,4 +1,4 @@
-name: Deploy Vibe Coding Notes to GitHub Pages
+name: Deploy Ansan Festival to GitHub Pages
 
 on:
   push:
@@ -24,15 +24,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Test learning content and practice logic
+      - name: Test festival program data
         run: npm test
-      - name: Install Chromium for document workflow checks
+      - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Verify learning navigation, search and interactive exercises
+      - name: Verify festival navigation and interactions
         run: CHROMIUM_PATH="$(node -p 'require("@playwright/test").chromium.executablePath()')" npm run test:e2e
       - name: Build site
         run: npm run build
