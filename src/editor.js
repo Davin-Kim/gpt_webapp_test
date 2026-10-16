@@ -3,7 +3,6 @@ import StarterKit from "@tiptap/starter-kit";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
 import { TableKit } from "@tiptap/extension-table";
-import Image from "@tiptap/extension-image";
 import Highlight from "@tiptap/extension-highlight";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
@@ -79,14 +78,6 @@ export function makeEditor(element, html, onUpdate, onSelection) {
       TextStyleKit,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TableKit.configure({ table: { resizable: true } }),
-      Image.configure({
-        allowBase64: true,
-        resize: {
-          enabled: true,
-          directions: ["bottom-right", "bottom-left"],
-          alwaysPreserveAspectRatio: true,
-        },
-      }),
       Highlight.configure({ multicolor: true }),
       PageBreak,
       ParagraphSpace,

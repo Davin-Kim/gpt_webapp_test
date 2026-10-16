@@ -1371,3 +1371,43 @@ dialog .error {
     flex-shrink: 0;
   }
 }
+.session-notice {
+  padding: 9px 22px;
+  background: #f5f8fd;
+  border-bottom: 1px solid #e4ebf5;
+  color: #8394ad;
+  font-size: 10px;
+  line-height: 1.7;
+}
+dialog textarea {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #d7e0ed;
+  border-radius: 7px;
+  font:
+    12px/1.8 "Malgun Gothic",
+    sans-serif;
+  color: #48607f;
+  resize: vertical;
+}
+#paste-text {
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  #paste-text {
+    font-size: 9px;
+    padding: 8px;
+  }
+  .session-notice {
+    padding: 7px 12px;
+    font-size: 8px;
+  }
+  .header-actions #copy-text {
+    font-size: 9px;
+  }
+  .document-title input {
+    width: 105px;
+  }
+}

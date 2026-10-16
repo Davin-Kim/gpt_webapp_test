@@ -32,7 +32,7 @@ jobs:
         run: npm test
       - name: Install Chromium for document workflow checks
         run: npx playwright install --with-deps chromium
-      - name: Verify import, editing, export and viewer in Chromium
+      - name: Verify memory-only text editing with file and storage APIs blocked
         run: CHROMIUM_PATH="$(node -p 'require("@playwright/test").chromium.executablePath()')" npm run test:e2e
       - name: Build site
         run: npm run build

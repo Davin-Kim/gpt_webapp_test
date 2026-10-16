@@ -78,7 +78,6 @@ export function cleanHTML(html) {
       "th",
       "colgroup",
       "col",
-      "img",
       "a",
       "mark",
       "font",

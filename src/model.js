@@ -1,5 +1,5 @@
 export const blankHTML = "<p></p>";
-export const sampleHTML = `<h1 style="text-align:center">문서, 더 가볍게 열다.</h1><p style="text-align:center;color:#64748b">브라우저에서 읽고, 수정하고, 다시 저장하세요.</p><p></p><h2>설치 없는 나의 문서 작업실</h2><p>문서온은 HWPX와 Word(DOCX) 문서를 브라우저에서 확인하고 편집하는 도구입니다. 이 문서는 기능을 살펴보기 위한 <strong>예시 문서</strong>이며, 사용자의 실제 파일이 아닙니다.</p><h3>이렇게 시작해 보세요</h3><ol><li><p>왼쪽 위 <strong>파일 열기</strong>로 HWPX 또는 DOCX를 선택하세요.</p></li><li><p><strong>보기</strong> 모드에서 확대하거나 여러 페이지를 살펴보세요.</p></li><li><p><strong>편집</strong> 모드에서 글자·문단·표·그림을 수정하세요.</p></li></ol><h3>읽기와 쓰기에 필요한 것들</h3><table><tbody><tr><th><p>문서 보기</p></th><th><p>문서 편집</p></th></tr><tr><td><p>쪽 이동 · 배율 · 두 쪽 / 모아보기</p></td><td><p>제목 · 글꼴 · 색상 · 정렬 · 목록</p></td></tr><tr><td><p>전체 화면 · 찾기 · 인쇄</p></td><td><p>표 · 이미지 · 링크 · 쪽 나누기</p></td></tr></tbody></table><p></p><blockquote><p>문서 내용은 서버로 전송하지 않습니다. 작업 중인 문서는 이 브라우저에 임시 저장되며, 파일 저장으로 별도 사본을 내려받을 수 있습니다.</p></blockquote><p>※ 원본의 복잡한 조판과 일부 개체는 달라질 수 있습니다. 중요한 문서는 내려받은 사본을 한글 또는 Word에서도 확인하세요.</p><div data-page-break="true"></div><h2>함께 쓰는 문서</h2><p>HWPX를 열어 DOCX로, DOCX를 열어 HWPX로 저장할 수 있습니다. 문서를 새로 만들 때에도 원하는 형식을 고를 수 있습니다.</p><h3>회의록 예시</h3><p><strong>회의 주제</strong>　브라우저 문서 작업 환경 검토</p><p><strong>참석자</strong>　기획팀 · 디자인팀 · 개발팀</p><table><tbody><tr><th><p>항목</p></th><th><p>논의 내용</p></th><th><p>상태</p></th></tr><tr><td><p>문서 열기</p></td><td><p>HWPX와 DOCX의 기본 내용 확인</p></td><td><p>확인</p></td></tr><tr><td><p>후속 작업</p></td><td><p>서식 편집 후 사본 내려받기</p></td><td><p>예정</p></td></tr></tbody></table><p></p><p>상단의 ‘편집’ 버튼을 눌러 이 문장을 바꿔보세요.</p>`;
+export const sampleHTML = `<h1 style="text-align:center">텍스트를 더 편하게 읽고 쓰세요.</h1><p style="text-align:center;color:#64748b">파일·드라이브 연동 없이 사용하는 문서 작업실</p><p></p><h2>텍스트 붙여넣기로 시작하세요</h2><p>상단의 <strong>텍스트 붙여넣기</strong>를 누르고 내용을 입력하면 페이지 형태로 읽을 수 있습니다. <strong>보기</strong>에서는 문서를 크게 살펴보고, <strong>편집</strong>에서는 문장과 서식을 수정하세요.</p><h3>현재 제공하는 기능</h3><table><tbody><tr><th><p>보기</p></th><th><p>편집</p></th></tr><tr><td><p>확대·축소 / 두 쪽·모아보기 / 검색</p></td><td><p>글자·문단 서식 / 표 / 쪽 나누기</p></td></tr></tbody></table><blockquote><p>내용은 자동 저장하지 않습니다. 새로고침하거나 닫기 전에 필요한 내용을 직접 복사하세요.</p></blockquote><p>파일 열기, 업로드, 다운로드, 드라이브 연결, 브라우저 저장은 제공하지 않습니다. HWPX·DOCX 파일을 직접 열거나 저장할 수 없습니다.</p><div data-page-break="true"></div><h2>간단한 회의 메모</h2><p><strong>주제</strong>　텍스트 기반 작업 환경 검토</p><p><strong>내용</strong>　필요한 내용을 붙여넣고 편집해 보세요.</p><ul><li><p>본문을 선택해 글자 크기와 색상을 바꿀 수 있습니다.</p></li><li><p>표에 내용을 적거나 행과 열을 추가할 수 있습니다.</p></li></ul><p>‘내용 복사’는 복사할 텍스트를 보여줍니다. Ctrl+C 또는 ⌘C로 직접 복사하세요.</p>`;
 export const defaultLayout = {
   width: 210,
   height: 297,
@@ -22,13 +22,6 @@ export function validLayout(l) {
     l.left + l.right < l.width - 30 &&
     l.top + l.bottom < l.height - 30
   );
-}
-export function downloadName(name, extension) {
-  const stem = String(name || "제목 없는 문서")
-    .replace(/\.(hwpx|docx|html)$/i, "")
-    .replace(/[\\/:*?"<>|\x00-\x1f]/g, "_")
-    .slice(0, 100);
-  return `${stem}.${extension}`;
 }
 export function textStats(html) {
   const text = html
