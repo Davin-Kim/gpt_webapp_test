@@ -12,3 +12,10 @@ backups/
 playwright-report/
 .env
 .env.*
+*.hwpx
+*.docx
+*.hwp
+*.doc
+*.pdf
+*.odt
+*.rtf

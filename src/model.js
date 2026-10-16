@@ -1,127 +1,42 @@
-export const event = {
-  title: "제16회 안산읍성문화예술제",
-  date: "2026. 10. 17. 토요일",
-  time: "11:00 — 17:00",
-  place: "안산읍성 일원",
-  route: "안산초교 → 안산읍성",
+export const blankHTML = "<p></p>";
+export const sampleHTML = `<h1 style="text-align:center">문서, 더 가볍게 열다.</h1><p style="text-align:center;color:#64748b">브라우저에서 읽고, 수정하고, 다시 저장하세요.</p><p></p><h2>설치 없는 나의 문서 작업실</h2><p>문서온은 HWPX와 Word(DOCX) 문서를 브라우저에서 확인하고 편집하는 도구입니다. 이 문서는 기능을 살펴보기 위한 <strong>예시 문서</strong>이며, 사용자의 실제 파일이 아닙니다.</p><h3>이렇게 시작해 보세요</h3><ol><li><p>왼쪽 위 <strong>파일 열기</strong>로 HWPX 또는 DOCX를 선택하세요.</p></li><li><p><strong>보기</strong> 모드에서 확대하거나 여러 페이지를 살펴보세요.</p></li><li><p><strong>편집</strong> 모드에서 글자·문단·표·그림을 수정하세요.</p></li></ol><h3>읽기와 쓰기에 필요한 것들</h3><table><tbody><tr><th><p>문서 보기</p></th><th><p>문서 편집</p></th></tr><tr><td><p>쪽 이동 · 배율 · 두 쪽 / 모아보기</p></td><td><p>제목 · 글꼴 · 색상 · 정렬 · 목록</p></td></tr><tr><td><p>전체 화면 · 찾기 · 인쇄</p></td><td><p>표 · 이미지 · 링크 · 쪽 나누기</p></td></tr></tbody></table><p></p><blockquote><p>문서 내용은 서버로 전송하지 않습니다. 작업 중인 문서는 이 브라우저에 임시 저장되며, 파일 저장으로 별도 사본을 내려받을 수 있습니다.</p></blockquote><p>※ 원본의 복잡한 조판과 일부 개체는 달라질 수 있습니다. 중요한 문서는 내려받은 사본을 한글 또는 Word에서도 확인하세요.</p><div data-page-break="true"></div><h2>함께 쓰는 문서</h2><p>HWPX를 열어 DOCX로, DOCX를 열어 HWPX로 저장할 수 있습니다. 문서를 새로 만들 때에도 원하는 형식을 고를 수 있습니다.</p><h3>회의록 예시</h3><p><strong>회의 주제</strong>　브라우저 문서 작업 환경 검토</p><p><strong>참석자</strong>　기획팀 · 디자인팀 · 개발팀</p><table><tbody><tr><th><p>항목</p></th><th><p>논의 내용</p></th><th><p>상태</p></th></tr><tr><td><p>문서 열기</p></td><td><p>HWPX와 DOCX의 기본 내용 확인</p></td><td><p>확인</p></td></tr><tr><td><p>후속 작업</p></td><td><p>서식 편집 후 사본 내려받기</p></td><td><p>예정</p></td></tr></tbody></table><p></p><p>상단의 ‘편집’ 버튼을 눌러 이 문장을 바꿔보세요.</p>`;
+export const defaultLayout = {
+  width: 210,
+  height: 297,
+  top: 20,
+  bottom: 20,
+  left: 22,
+  right: 22,
 };
-export const programs = [
-  {
-    id: "parade",
-    type: "재현",
-    time: "11:00—11:40",
-    start: "11:00",
-    end: "11:40",
-    title: "정조대왕 능행차 공동재현",
-    place: "안산초교 → 안산읍성",
-    tag: "대표 프로그램",
-    description:
-      "정조대왕의 발자취를 따라, 안산의 길 위에 역사가 다시 펼쳐집니다. 행렬을 따라 이어지는 축제의 시작을 만나보세요.",
-  },
-  {
-    id: "opening",
-    type: "공연",
-    time: "11:40—12:20",
-    start: "11:40",
-    end: "12:20",
-    title: "개막식",
-    place: "행사장",
-    tag: "함께 여는 축제",
-    description:
-      "제16회 안산읍성문화예술제의 시작을 함께하는 시간입니다. 전통의 멋과 오늘의 설렘이 한자리에 모입니다.",
-  },
-  {
-    id: "busking",
-    type: "공연",
-    time: "13:00—13:40",
-    start: "13:00",
-    end: "13:40",
-    title: "가을빛 버스킹",
-    place: "전시관 앞",
-    tag: "가을의 선율",
-    description:
-      "전시관 앞에 잠시 머물러 가을의 선율을 즐겨보세요. 일상의 풍경에 음악이 더해집니다.",
-  },
-  {
-    id: "concert",
-    type: "공연",
-    time: "14:00—17:00",
-    start: "14:00",
-    end: "17:00",
-    title: "천년안산 음악회",
-    place: "행사장",
-    tag: "오후의 하이라이트",
-    description:
-      "반가운 출연진과 함께하는 가을 오후의 음악회. 세대를 잇는 노래로 축제의 여운을 나눕니다.",
-  },
-  {
-    id: "community",
-    type: "참여·체험",
-    time: "11:00—13:00",
-    start: "11:00",
-    end: "13:00",
-    title: "안산동 경로잔치",
-    place: "행사장",
-    tag: "이웃과 함께",
-    description: "마을의 어르신과 이웃이 함께하는 정겨운 시간입니다.",
-  },
-  {
-    id: "culture",
-    type: "참여·체험",
-    time: "11:00—17:00",
-    start: "11:00",
-    end: "17:00",
-    title: "문화체험 한마당",
-    place: "행사장",
-    tag: "손끝으로 만나는 문화",
-    description:
-      "가족, 친구와 함께 우리 문화를 가까이 느껴보세요. 구체적인 체험 종류와 운영 방식은 시연을 위한 안내로 별도 확정되지 않았습니다.",
-  },
-  {
-    id: "drawing",
-    type: "참여·체험",
-    time: "11:00—17:00",
-    start: "11:00",
-    end: "17:00",
-    title: "다함께 수암마을 그리기",
-    place: "행사장",
-    tag: "우리 마을의 색",
-    description:
-      "각자의 시선으로 바라본 수암마을을 그림으로 남겨보는 시간입니다.",
-  },
-  {
-    id: "ras",
-    type: "참여·체험",
-    time: "11:00—17:00",
-    start: "11:00",
-    end: "17:00",
-    title: "안산읍성 RAS",
-    place: "안산읍성 일원",
-    tag: "읽고, 담고, 걷다",
-    description:
-      "가을을 읽고, 추억을 담고, 역사를 걷는 시간. 포스터에 소개된 안산읍성 RAS 프로그램입니다. 세부 참여 방식은 제공 자료에 없어 확정 안내하지 않습니다.",
-  },
-];
-export function filterPrograms(type) {
-  return type === "전체" ? programs : programs.filter((p) => p.type === type);
-}
-export function calendarFile() {
+export const mmToPx = (mm) => (mm * 96) / 25.4;
+export function validLayout(l) {
   return (
-    [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Ansan Festival Demo//KO",
-      "CALSCALE:GREGORIAN",
-      "BEGIN:VEVENT",
-      "UID:ansan-festival-20261017@demo.local",
-      "DTSTAMP:20261001T000000Z",
-      "DTSTART:20261017T020000Z",
-      "DTEND:20261017T080000Z",
-      "SUMMARY:제16회 안산읍성문화예술제",
-      "LOCATION:안산읍성 일원",
-      "DESCRIPTION:포스터 기반 행사 소개 시연 사이트입니다. 실제 방문 전 주최 측 공지를 확인하세요.",
-      "END:VEVENT",
-      "END:VCALENDAR",
-    ].join("\r\n") + "\r\n"
+    l &&
+    ["width", "height", "top", "bottom", "left", "right"].every(
+      (k) => Number.isFinite(l[k]) && l[k] >= 0,
+    ) &&
+    l.width >= 80 &&
+    l.width <= 500 &&
+    l.height >= 80 &&
+    l.height <= 700 &&
+    l.left + l.right < l.width - 30 &&
+    l.top + l.bottom < l.height - 30
   );
+}
+export function downloadName(name, extension) {
+  const stem = String(name || "제목 없는 문서")
+    .replace(/\.(hwpx|docx|html)$/i, "")
+    .replace(/[\\/:*?"<>|\x00-\x1f]/g, "_")
+    .slice(0, 100);
+  return `${stem}.${extension}`;
+}
+export function textStats(html) {
+  const text = html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+  return {
+    characters: text.replace(/\s/g, "").length,
+    words: text ? text.split(/\s+/).length : 0,
+  };
 }

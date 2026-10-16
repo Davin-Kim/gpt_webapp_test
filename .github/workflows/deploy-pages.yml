@@ -1,4 +1,4 @@
-name: Deploy Ansan Festival to GitHub Pages
+name: Deploy Document Studio to GitHub Pages
 
 on:
   push:
@@ -28,14 +28,18 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Test festival program data
+      - name: Test document utilities
         run: npm test
+      - name: Install Chromium for document workflow checks
+        run: npx playwright install --with-deps chromium
+      - name: Verify import, editing, export and viewer in Chromium
+        run: CHROMIUM_PATH="$(node -p 'require("@playwright/test").chromium.executablePath()')" npm run test:e2e
       - name: Build site
         run: npm run build
       - name: Reject private files in deployment
         shell: bash
         run: |
-          if find dist -type f \( -iname '*.xlsx' -o -iname '*.xls' -o -iname '*.xlsm' -o -iname '*.xlsb' -o -iname '*.csv' -o -iname '*.json' -o -iname '*.json.backup' \) -print -quit | grep -q .; then
+          if find dist -type f \( -iname '*.hwpx' -o -iname '*.docx' -o -iname '*.hwp' -o -iname '*.doc' -o -iname '*.pdf' -o -iname '*.xlsx' -o -iname '*.xls' -o -iname '*.xlsm' -o -iname '*.xlsb' -o -iname '*.csv' -o -iname '*.json' -o -iname '*.json.backup' \) -print -quit | grep -q .; then
             echo 'Unexpected spreadsheet or data backup in dist.' >&2
             exit 1
           fi

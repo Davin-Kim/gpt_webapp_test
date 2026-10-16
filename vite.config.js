@@ -11,6 +11,11 @@ export default defineConfig({
       allow: [fileURLToPath(new URL(".", import.meta.url))],
       deny: [
         "**/*.xlsx",
+        "**/*.hwpx",
+        "**/*.docx",
+        "**/*.hwp",
+        "**/*.doc",
+        "**/*.pdf",
         "**/*.json.backup",
         ".env",
         ".env.*",
