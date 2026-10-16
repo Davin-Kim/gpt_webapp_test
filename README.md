@@ -1,6 +1,6 @@
 # 문서온 · 브라우저 문서 작업실
 
-HWPX와 Word(DOCX)를 별도 뷰어 설치 없이 읽고, 기본 문서 내용을 편집한 뒤 새 사본으로 저장하는 웹앱입니다. 기존 행사 홈페이지와 단일 festival.html을 교체했습니다.
+HWPX와 Word(DOCX)를 별도 뷰어 설치 없이 읽고, 기본 문서 내용을 편집한 뒤 새 사본으로 저장하는 웹앱입니다. 기존 행사 홈페이지를 교체했습니다. 예전에 공유한 festival.html 링크는 새 문서온 주소로 연결됩니다.
 
 **사용 주소:** https://davin-kim.github.io/gpt_webapp_test/
 

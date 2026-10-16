@@ -12,3 +12,6 @@ for(const [location,info] of Object.entries(lock.packages)){
 }
 await writeFile(resolve(root,'dist/THIRD-PARTY-NOTICES.txt'),output.join('\n'));
 console.log('Third-party license notices added to dist.');
+
+// Keep previously shared standalone-file links usable after replacing the app.
+await writeFile(resolve(root, "dist/festival.html"), await readFile(resolve(root, "festival.html")));
